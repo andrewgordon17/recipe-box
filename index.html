@@ -203,7 +203,7 @@
 
       list.innerHTML = matches.map(r => `
         <li class="recipe">
-          <div class="title"><a href="${escapeHtml(r.url)}" target="_blank" rel="noopener noreferrer">${highlight(r.title || r.url, q)}</a></div>
+          <div class="title">${r.type === 'video' ? '🎥 ' : ''}<a href="${escapeHtml(r.url)}" target="_blank" rel="noopener noreferrer">${highlight(r.title || r.url, q)}</a></div>
           <div class="meta">${highlight(r.site || '', q)}${r.site && r.date ? '<span class="dot">·</span>' : ''}${fmtDate(r.date)}${r.from ? '<span class="dot">·</span>from ' + highlight(r.from, q) : ''}</div>
           <div class="note ${r.note ? '' : 'empty'}">${highlight(r.note || '', q)}</div>
         </li>`).join('');

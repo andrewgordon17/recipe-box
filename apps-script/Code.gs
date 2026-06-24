@@ -77,8 +77,8 @@ function handleMessage(msg) {
   }
 
   var note = buildNote(body, url, subject);
-  var title = fetchTitle(url) || subject || url;
   var site = hostname(url);
+  var title = resolveTitle(url, subject);
 
   var entry = {
     id: Utilities.getUuid(),
@@ -87,6 +87,7 @@ function handleMessage(msg) {
     site: site,
     note: note,
     from: sender,
+    type: isVideoHost(site) ? 'video' : 'link',
     date: msg.getDate().toISOString()
   };
 
@@ -132,6 +133,82 @@ function isAllowedSender(sender) {
 function hostname(url) {
   var m = url.match(/^https?:\/\/([^\/]+)/i);
   return m ? m[1].replace(/^www\./, '') : '';
+}
+
+/* Hosts we treat as videos — used for friendly titles and the 🎥 badge. */
+var VIDEO_NAMES = {
+  'facebook.com': 'Facebook', 'fb.watch': 'Facebook', 'fb.com': 'Facebook',
+  'youtube.com': 'YouTube', 'm.youtube.com': 'YouTube', 'youtu.be': 'YouTube',
+  'tiktok.com': 'TikTok', 'vm.tiktok.com': 'TikTok',
+  'instagram.com': 'Instagram', 'vimeo.com': 'Vimeo'
+};
+
+function isVideoHost(host) {
+  host = (host || '').toLowerCase().replace(/^www\./, '');
+  for (var key in VIDEO_NAMES) {
+    if (host === key || host.indexOf('.' + key) === host.length - key.length - 1) return true;
+  }
+  return false;
+}
+
+/**
+ * Best title we can get, never failing. Order:
+ *   1. oEmbed (YouTube/TikTok/Vimeo — real video titles, no auth)
+ *   2. page scrape (JSON-LD Recipe → og:title → <title>), if not junk
+ *   3. the email's subject line, if the sender typed one
+ *   4. the scraped title even if generic
+ *   5. a friendly fallback like "Facebook video" or "example.com link"
+ */
+function resolveTitle(url, subject) {
+  var oe = oembedTitle(url);
+  if (oe) return oe;
+
+  var scraped = fetchTitle(url);
+  if (scraped && !isJunkTitle(scraped, url)) return scraped;
+
+  if (subject && subject.trim()) return clean(subject);
+  if (scraped) return scraped;
+  return friendlyFallback(url);
+}
+
+/** No-auth oEmbed lookups for the video hosts that support them. */
+function oembedTitle(url) {
+  var host = hostname(url);
+  var endpoint = null;
+  if (/(^|\.)youtube\.com$/.test(host) || host === 'youtu.be') {
+    endpoint = 'https://www.youtube.com/oembed?format=json&url=' + encodeURIComponent(url);
+  } else if (/(^|\.)tiktok\.com$/.test(host)) {
+    endpoint = 'https://www.tiktok.com/oembed?url=' + encodeURIComponent(url);
+  } else if (/(^|\.)vimeo\.com$/.test(host)) {
+    endpoint = 'https://vimeo.com/api/oembed.json?url=' + encodeURIComponent(url);
+  }
+  if (!endpoint) return null;
+  try {
+    var res = UrlFetchApp.fetch(endpoint, { muteHttpExceptions: true, followRedirects: true });
+    if (res.getResponseCode() >= 400) return null;
+    var data = JSON.parse(res.getContentText());
+    if (data && data.title) return clean(String(data.title));
+  } catch (e) { /* ignore */ }
+  return null;
+}
+
+/** Generic placeholder titles that scraping login-walled sites returns. */
+function isJunkTitle(title, url) {
+  var t = clean(title).toLowerCase();
+  if (!t || t.length < 3) return true;
+  if (t === hostname(url).toLowerCase()) return true;
+  var junk = ['facebook', 'log in to facebook', 'log into facebook', 'watch',
+              'instagram', 'login • instagram', 'tiktok', 'tiktok - make your day',
+              'video', 'reel', 'home'];
+  return junk.indexOf(t) !== -1;
+}
+
+function friendlyFallback(url) {
+  var host = hostname(url);
+  var name = VIDEO_NAMES[host.replace(/^www\./, '')];
+  if (name) return name + ' video';
+  if (isVideoHost(host)) return 'Video';
+  return host + ' link';
 }
 
 /** Best-effort recipe title: JSON-LD Recipe name → og:title → <title>. */
