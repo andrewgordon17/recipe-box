@@ -1,0 +1,11 @@
+[
+  {
+    "id": "example-1",
+    "title": "Welcome! This is an example recipe.",
+    "url": "https://www.bbcgoodfood.com/recipes/best-spaghetti-bolognese-recipe",
+    "site": "bbcgoodfood.com",
+    "note": "This is a sample entry so you can see how things look. Delete it once your first real recipe arrives. Notes you include in your email show up right here and are searchable.",
+    "from": "you@example.com",
+    "date": "2026-06-24T12:00:00.000Z"
+  }
+]
