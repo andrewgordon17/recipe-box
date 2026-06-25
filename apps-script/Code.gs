@@ -159,16 +159,41 @@ function isVideoHost(host) {
  *   4. the scraped title even if generic
  *   5. a friendly fallback like "Facebook video" or "example.com link"
  */
+var MAX_TITLE = 90;
+
 function resolveTitle(url, subject) {
-  var oe = oembedTitle(url);
-  if (oe) return oe;
+  var raw = oembedTitle(url);
+  if (!raw) {
+    var scraped = fetchTitle(url);
+    if (scraped && !isJunkTitle(scraped, url)) raw = scraped;
+    else if (subject && subject.trim()) raw = subject;
+    else if (scraped) raw = scraped;
+    else raw = friendlyFallback(url);
+  }
+  return capTitle(tidySocialTitle(raw, url));
+}
 
-  var scraped = fetchTitle(url);
-  if (scraped && !isJunkTitle(scraped, url)) return scraped;
+/**
+ * Social sites cram the whole caption into og:title as
+ * `Author on Instagram: "the entire post…"`. Keep just the author + platform,
+ * which is short and identifies the source. The note/link still has the rest.
+ */
+function tidySocialTitle(title, url) {
+  var t = clean(title);
+  var m = t.match(/^(.{2,60}? on (?:Instagram|Facebook|TikTok|Threads))\b\s*[:\-–—]/i);
+  if (m) return m[1];
+  return t;
+}
 
-  if (subject && subject.trim()) return clean(subject);
-  if (scraped) return scraped;
-  return friendlyFallback(url);
+/** Trim a title to a readable length, breaking on a word boundary. */
+function capTitle(s, max) {
+  max = max || MAX_TITLE;
+  s = clean(s);
+  if (s.length <= max) return s;
+  var cut = s.slice(0, max);
+  var sp = cut.lastIndexOf(' ');
+  if (sp > max * 0.6) cut = cut.slice(0, sp);
+  return cut.replace(/[\s\-–—:,;."“”]+$/, '') + '…';
 }
 
 /** No-auth oEmbed lookups for the video hosts that support them. */
@@ -270,10 +295,14 @@ function clean(s) {
 
 function decodeEntities(s) {
   return (s || '')
+    .replace(/&#x([0-9a-f]+);/gi, function (_, h) { return codePoint(parseInt(h, 16)); })
+    .replace(/&#(\d+);/g, function (_, d) { return codePoint(parseInt(d, 10)); })
     .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"').replace(/&#0?39;/g, "'").replace(/&apos;/g, "'")
-    .replace(/&#x27;/gi, "'").replace(/&nbsp;/g, ' ')
-    .replace(/&#(\d+);/g, function (_, d) { return String.fromCharCode(parseInt(d, 10)); });
+    .replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&nbsp;/g, ' ');
+}
+
+function codePoint(n) {
+  try { return String.fromCodePoint(n); } catch (e) { return ''; }
 }
 
 /* ----------------------- GitHub I/O ----------------------- */
