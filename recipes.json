@@ -1,17 +1,17 @@
 [
   {
     "id": "c9fe676c-96fc-4530-959d-b987227a9496",
-    "title": "Side dish",
+    "title": "Roasted Carrots and Crispy Chickpeas with Herbed Yogurt",
     "url": "https://www.facebook.com/share/r/1HPr4kHLfD/?mibextid=wwXIfr",
     "site": "facebook.com",
-    "note": "",
+    "note": "Side Dish",
     "from": "katethom2557@gmail.com",
     "type": "video",
     "date": "2026-07-31T20:51:12.000Z"
   },
   {
     "id": "7dc32b7c-36c4-4387-bc57-3b16a8e77a13",
-    "title": "Facebook",
+    "title": "Shaved Tofu Gyros",
     "url": "https://www.facebook.com/share/r/18zfD6y6Zn/?mibextid=wwXIfr",
     "site": "facebook.com",
     "note": "Add gyro seasoning",
@@ -31,7 +31,7 @@
   },
   {
     "id": "4f3464d8-fad5-4d2f-8fbd-b5baed3bff9b",
-    "title": "Facebook",
+    "title": "Shaved Tofu Pita Wraps",
     "url": "https://www.facebook.com/share/r/1CuxZd6kSZ/?mibextid=wwXIfr",
     "site": "facebook.com",
     "note": "Buy tzatziki instead of making tahini sauce",
@@ -98,14 +98,5 @@
     "from": "katethom2557@gmail.com",
     "type": "video",
     "date": "2026-06-25T00:00:18.000Z"
-  },
-  {
-    "id": "example-1",
-    "title": "Welcome! This is an example recipe.",
-    "url": "https://www.bbcgoodfood.com/recipes/best-spaghetti-bolognese-recipe",
-    "site": "bbcgoodfood.com",
-    "note": "This is a sample entry so you can see how things look. Delete it once your first real recipe arrives. Notes you include in your email show up right here and are searchable.",
-    "from": "you@example.com",
-    "date": "2026-06-24T12:00:00.000Z"
   }
 ]
